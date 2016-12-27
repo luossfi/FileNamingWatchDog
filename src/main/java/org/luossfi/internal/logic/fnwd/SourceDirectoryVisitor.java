@@ -43,17 +43,11 @@ import org.luossfi.internal.data.fnwd.PackageRule;
 /**
  * <p>
  * The SourceDirectoryVisitor collects all Java complianceIssues beginning from
- * a given root directory into a sorted map. This map contains the
- * complianceIssues mapped to a sorted set of all source file names (no
- * directories) contained in this package. If the package does not contain any
- * files then it is mapped to an empty set.<br>
- * The result is accessed by calling {@link SourceDirectoryVisitor#getPackages()
- * getPackages()} method.
- * </p>
- * <p>
- * If any {@link IOException} occurs during the collection process it is mapped
- * to the path which caused the error. The errors can be accessed by calling
- * {@link SourceDirectoryVisitor#getErrors() getErrors()}.
+ * a given root directory into a sorted map (for better human readability). This
+ * map contains the complianceIssues mapped to a sorted set of all source file
+ * names (no directories) contained in this package. If the package does not
+ * contain any files then it is mapped to an empty set.<br>
+ * The result is accessed by calling {@link #getComplianceIssues()} method.
  * </p>
  * <p>
  * <b>Since this visitor does not lock any files, it is not advisable to add or
@@ -90,6 +84,7 @@ public class SourceDirectoryVisitor implements FileVisitor<Path>
    * Instantiates a new source directory visitor.
    *
    * @param rootDirectory the root directory
+   * @param ruleSet the set of package rules
    */
   public SourceDirectoryVisitor( Path rootDirectory, Set<PackageRule> ruleSet )
   {

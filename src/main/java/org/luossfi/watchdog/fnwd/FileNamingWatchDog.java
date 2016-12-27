@@ -45,17 +45,17 @@ import org.luossfi.internal.logic.fnwd.SourceDirectoryVisitor;
  * It parses the definition file and stores the result internally.
  * </p>
  * <p>
- * The method {@link FileNamingWatchDog#check(Path) check(Path)} takes in the
- * source files root directory and checks the whole subtree against the rule
- * set. Each finding is documented in a map which is returned by this method.
- * The map's content has the following meaning:
+ * The method {@link #check(Path)} takes in the source files root directory and
+ * checks the whole subtree against the rule set. Each finding is documented in
+ * a map which is returned by this method. The map's content has the following
+ * meaning:
+ * </p>
  * <ul>
  * <li>package name -&gt; empty set: The package name does not comply to the
  * defined rules</li>
  * <li>package name -&gt; set of file names: The package name is compliant but
  * the file names are not.</li>
  * </ul>
- * </p>
  *
  * @author Steff Lukas
  * @since 1.0
