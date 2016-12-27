@@ -24,5 +24,6 @@ package "org.luossfi." ([a-z0-9]+ "." )* "%PROJECT%"
 Please see the [documentation](./doc/FileNamingWatchDog.md).
 
 ## Todos
-[] Create Gradle Plugin so the Watch Dog can be integrated into the build process
-[] Write Unit Tests
+
+- [ ] Create Gradle Plugin so the Watch Dog can be integrated into the build process
+- [ ] Write Unit Tests
