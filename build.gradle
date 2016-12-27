@@ -1,0 +1,96 @@
+/*
+ * FileNamingWatchDog, a library for checking Java packages and source file
+ * names for compliance to naming conventions.
+ *
+ * Copyright (C) 2016++ Steff Lukas <steff.lukas@luossfi.org>
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'antlr'
+
+group 'org.luossfi.tools'
+version '1.0'
+
+repositories {
+  jcenter()
+}
+
+dependencies {
+  antlr 'org.antlr:antlr4:4.5.3'
+}
+
+sourceSets {
+  main {
+    java {
+      srcDir "$buildDir/generated-src/antlr/"
+    }
+  }
+}
+
+// ========== ANTLR ==========
+generateGrammarSource {
+  outputDirectory = file("$buildDir/generated-src/antlr/org/luossfi/gen/antlr/fnwd")
+  arguments += ["-visitor", "-no-listener"]
+}
+
+// ========== Gradle Wrapper ==========
+wrapper {
+  gradleVersion '3.2.1'
+}
+
+// ========== Eclipse ==========
+eclipse {
+  classpath {
+    downloadSources = true
+    downloadJavadoc = true
+  }
+}
+
+eclipseJdt {
+  doLast {
+    File prefsResources = file('.settings/org.eclipse.core.resources.prefs')
+    prefsResources.write('eclipse.preferences.version=1\r\n')
+    prefsResources.append('encoding/<project>=UTF-8')
+  
+    File prefsRuntime = file('.settings/org.eclipse.core.runtime.prefs')
+    prefsRuntime.write('eclipse.preferences.version=1\r\n')
+    prefsRuntime.append('line.separator=\\r\\n')
+  
+    File prefsJdtUi = file('.settings/org.eclipse.jdt.ui.prefs')
+    prefsJdtUi.write('eclipse.preferences.version=1\r\n')
+    prefsJdtUi.append('org.eclipse.jdt.ui.javadoc=true\r\n')
+    prefsJdtUi.append('org.eclipse.jdt.ui.text.custom_code_templates=<?xml version\\="1.0" encoding\\="UTF-8" standalone\\="no"?><templates><template autoinsert\\="false" context\\="gettercomment_context" deleted\\="false" description\\="Comment for getter method" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.gettercomment" name\\="gettercomment"/><template autoinsert\\="false" context\\="settercomment_context" deleted\\="false" description\\="Comment for setter method" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.settercomment" name\\="settercomment"/><template autoinsert\\="false" context\\="constructorcomment_context" deleted\\="false" description\\="Comment for created constructors" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.constructorcomment" name\\="constructorcomment"/><template autoinsert\\="false" context\\="filecomment_context" deleted\\="false" description\\="Comment for created Java files" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.filecomment" name\\="filecomment">/*\\n * FileNamingWatchDog, a library for checking Java packages and source file\\n * names for compliance to naming conventions.\\n *\\n * Copyright (C) ${year}++ ${user}\\n *\\n* This program is free software\\: you can redistribute it and/or modify it under\\n * the terms of the GNU Lesser General Public License as published by the Free\\n * Software Foundation, either version 3 of the License, or (at your option) any\\n * later version.\\n *\\n * This program is distributed in the hope that it will be useful, but WITHOUT\\n * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\\n * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more\\n * details.\\n *\\n * You should have received a copy of the GNU Lesser General Public License\\n * along with this program. If not, see &lt;http\\://www.gnu.org/licenses/&gt;.\\n */</template><template autoinsert\\="false" context\\="typecomment_context" deleted\\="false" description\\="Comment for created types" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.typecomment" name\\="typecomment">/**\\n * @author Steff Lukas\\n *\\n * ${tags}\\n */</template><template autoinsert\\="false" context\\="fieldcomment_context" deleted\\="false" description\\="Comment for fields" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.fieldcomment" name\\="fieldcomment"/><template autoinsert\\="false" context\\="methodcomment_context" deleted\\="false" description\\="Comment for non-overriding methods" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.methodcomment" name\\="methodcomment"/><template autoinsert\\="false" context\\="overridecomment_context" deleted\\="false" description\\="Comment for overriding methods" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.overridecomment" name\\="overridecomment">/** {@inheritDoc} */</template><template autoinsert\\="false" context\\="delegatecomment_context" deleted\\="false" description\\="Comment for delegate methods" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.delegatecomment" name\\="delegatecomment"/><template autoinsert\\="true" context\\="newtype_context" deleted\\="false" description\\="Newly created files" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.newtype" name\\="newtype">${filecomment}\\n${package_declaration}\\n\\n${typecomment}\\n${type_declaration}</template><template autoinsert\\="true" context\\="classbody_context" deleted\\="false" description\\="Code in new class type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.classbody" name\\="classbody">\\n</template><template autoinsert\\="true" context\\="interfacebody_context" deleted\\="false" description\\="Code in new interface type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.interfacebody" name\\="interfacebody">\\n</template><template autoinsert\\="true" context\\="enumbody_context" deleted\\="false" description\\="Code in new enum type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.enumbody" name\\="enumbody">\\n</template><template autoinsert\\="true" context\\="annotationbody_context" deleted\\="false" description\\="Code in new annotation type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.annotationbody" name\\="annotationbody">\\n</template><template autoinsert\\="true" context\\="catchblock_context" deleted\\="false" description\\="Code in new catch blocks" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.catchblock" name\\="catchblock">// ${todo} Auto-generated catch block\\n${exception_var}.printStackTrace();</template><template autoinsert\\="true" context\\="methodbody_context" deleted\\="false" description\\="Code in created method stubs" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.methodbody" name\\="methodbody">// ${todo} Auto-generated method stub\\n${body_statement}</template><template autoinsert\\="true" context\\="constructorbody_context" deleted\\="false" description\\="Code in created constructor stubs" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.constructorbody" name\\="constructorbody">${body_statement}\\n// ${todo} Auto-generated constructor stub</template><template autoinsert\\="true" context\\="getterbody_context" deleted\\="false" description\\="Code in created getters" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.getterbody" name\\="getterbody">return ${field};</template><template autoinsert\\="true" context\\="setterbody_context" deleted\\="false" description\\="Code in created setters" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.setterbody" name\\="setterbody">${field} \\= ${param};</template></templates>')
+  }
+}
+
+// ========== Jar Manifest ==========
+jar {
+  manifest {
+    attributes("Implementation-Title":"FileNamingWatchDog",
+               "Implementation-Version":version)
+  }
+}
+
+// ========== Custom Tasks ==========
+task cleanAssemble {
+  dependsOn clean
+  dependsOn assemble
+  group 'build'
+  description 'Deletes then build directory and assembles the outputs of this project after this.'
+}
+
+assemble.mustRunAfter clean
