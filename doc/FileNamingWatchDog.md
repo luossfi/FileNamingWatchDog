@@ -41,6 +41,7 @@ It is not allowed to nest a package rule inside another package rule.
 | `*?` | Lazy zero or more times multiplier |
 | `??` | Lazy zero or one times multiplier |
 | `+?` | Lazy one or more times multiplier |
+| `.` | Wildchard |
 
 ### Comments
 Comments are started with a \#-char and everything followed by this in the same line will be ignored. 
