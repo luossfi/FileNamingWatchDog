@@ -17,20 +17,35 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+buildscript {
+  repositories {
+    jcenter()
+  }
+  
+  dependencies {
+    classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+  }
+}
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'antlr'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
 
 group 'org.luossfi.tools'
 version '1.0'
+
+targetCompatibility = '1.8'
+sourceCompatibility = '1.8'
 
 repositories {
   jcenter()
 }
 
 dependencies {
-  antlr 'org.antlr:antlr4:4.5.3'
+  antlr 'org.antlr:antlr4:4.6'
 }
 
 sourceSets {
@@ -50,6 +65,56 @@ generateGrammarSource {
 // ========== Gradle Wrapper ==========
 wrapper {
   gradleVersion '3.2.1'
+}
+
+// ========== Maven Publishing ==========
+def pomConfig = {
+  licenses {
+    license {
+      name "GNU LESSER GENERAL PUBLIC LICENSE Version 3, 29 June 2007"
+      url "http://www.gnu.org/licenses/"
+      distribution "repo"
+    }
+  }
+}
+
+publishing {
+  publications {
+    mavenJava( MavenPublication ) {
+      from components.java
+      artifact sourceJar
+      artifact javadocJar
+      
+      pom.withXml {
+        def root = asNode()
+        root.appendNode('name', 'File Naming Watch Dog')
+        root.appendNode( 'description', 'A library for checking naming convention compliance' )
+        root.children().last() + pomConfig
+      }
+    }
+  }
+}
+
+
+// ========== Bintray Config ==========
+bintray {
+//user = 'bintray_user'    // Set this in publishing.gradle
+//key = 'bintray_api_key'  // Set this in publishing.gradle
+  publications = ['mavenJava'] 
+  pkg {
+//  repo = 'bintray_repo'  // Set this in publishing.gradle
+    name = "$project.name"
+    licenses = ['LGPL-3.0']
+//  vcsUrl = 'path to e.g. github repo'  // Set this in publishing.gradle
+    version {
+      name = "$project.version"
+    }
+  }
+}
+
+if(file('./publishing.gradle').exists())
+{
+  apply from: './publishing.gradle'
 }
 
 // ========== Eclipse ==========
@@ -78,19 +143,55 @@ eclipseJdt {
 }
 
 // ========== Jar Manifest ==========
+ext.sharedManifest = manifest {
+  attributes("Implementation-Title":"File Naming Watch Dog",
+             "Implementation-Version":version,
+             "Implementation-Vendor":"org.luossfi")
+}
+
 jar {
-  manifest {
-    attributes("Implementation-Title":"FileNamingWatchDog",
-               "Implementation-Version":version)
+  manifest = project.manifest {
+    from sharedManifest
+  }
+  from("$project.rootDir") {
+    include('COPYING', 'COPYING.LESSER')
+    into('META-INF')
   }
 }
 
 // ========== Custom Tasks ==========
+task sourceJar(type: Jar) {
+  from sourceSets.main.allSource
+  from("$project.rootDir") {
+    include('COPYING', 'COPYING.LESSER')
+    into('META-INF')
+  }
+  classifier "sources"
+  manifest = project.manifest {
+    from sharedManifest
+  }
+}
+
+task javadocJar(type: Jar) {
+  dependsOn javadoc
+  from(javadoc.destinationDir)
+  from("$project.rootDir") {
+    include('COPYING', 'COPYING.LESSER')
+    into('META-INF')
+  }
+  classifier "javadoc"
+  manifest = project.manifest {
+    from sharedManifest
+  }
+}
+
+javadocJar.mustRunAfter javadoc
+
 task cleanAssemble {
   dependsOn clean
   dependsOn assemble
   group 'build'
-  description 'Deletes then build directory and assembles the outputs of this project after this.'
+  description 'Deletes the build directory and assembles the outputs of this project after this.'
 }
 
 assemble.mustRunAfter clean

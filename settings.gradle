@@ -1,0 +1,2 @@
+// Decouple the project's directory name from the actual project name
+rootProject.name = 'FileNamingWatchDog'
