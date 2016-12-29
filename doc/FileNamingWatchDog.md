@@ -1,7 +1,8 @@
 # File Naming Watch Dog Documentation
 
 ## Convention Definition File
-The convention definition file is the place where the naming rules are defined.
+The convention definition file is the place where the naming rules are defined. The 
+Watch Dog assumes that this file is encoded using **UTF-8**.
 
 The rules have to be defined from special to general as the first rule matching
 a package will define which rules are used to check the packages files. If the
