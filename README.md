@@ -44,14 +44,13 @@ package "org.luossfi." ([a-z0-9]+ "." )* "%PROJECT%"
 ## Getting File Naming Watch Dog
 **File Naming Watch Dog** is available on [Bintray's jCenter repository](https://bintray.com/bintray/jcenter).
 
-Maven GAV: [org.luossfi.tools:FileNamingWatchDog:1.0](https://bintray.com/luossfi/org.luossfi/FileNamingWatchDog/1.0)
+Maven GAV: [org.luossfi.tools:FileNamingWatchDog:1.0.1](https://bintray.com/luossfi/org.luossfi/FileNamingWatchDog/1.0.1)
 
 ## Further Documentation
 Please see the [documentation](./doc/FileNamingWatchDog.md).
 
-## Todos
+## Gradle Plugin
+The Gradle Plugin can be found [here](https://github.com/luossfi/FileNamingWatchDogGradlePlugin). 
 
-- [x] Create Gradle Plugin so the Watch Dog can be integrated into the build process ([See 
-  here](https://github.com/luossfi/FileNamingWatchDogGradlePlugin))
-  
+## Todos
 - [ ] Write Unit Tests

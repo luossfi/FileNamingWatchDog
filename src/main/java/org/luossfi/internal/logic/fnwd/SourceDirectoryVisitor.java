@@ -161,8 +161,9 @@ public class SourceDirectoryVisitor implements FileVisitor<Path>
 
     DirectoryInfo directoryInfo = directoryStack.pop();
 
-    // This directory info contains an empty package
-    if ( !directoryInfo.hasContent() )
+    // This directory info contains an empty package which is not the "default
+    // package", so an empty root folder will not be marked as (false) positive
+    if ( !directoryInfo.hasContent() && !Files.isSameFile( rootDirectory, directoryInfo.getPath() ) )
     {
       String packageName = createPackageName( directoryInfo.getPath() );
       directoryInfo.setPackageName( packageName );

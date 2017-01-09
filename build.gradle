@@ -35,7 +35,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 group 'org.luossfi.tools'
-version '1.0'
+version '1.0.1'
 
 targetCompatibility = '1.8'
 sourceCompatibility = '1.8'

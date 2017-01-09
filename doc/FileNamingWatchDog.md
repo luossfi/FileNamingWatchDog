@@ -42,10 +42,25 @@ It is not allowed to nest a package rule inside another package rule.
 | `*?` | Lazy zero or more times multiplier |
 | `??` | Lazy zero or one times multiplier |
 | `+?` | Lazy one or more times multiplier |
-| `.` | Wildchard |
+| `.` | Wildcard |
 
+**Warning:**   
+Characters surrounded by `" "` are **NOT** automatically grouped, the `" "` should only improve the readability
+of the definition file (so escaping special characters is not necessary). If a sequence of characters
+(surrounded by `" "`) are supposed to be a group then it still is required to surround 
+them with `( )` to e.g. apply a multiplier to the whole sequence and not only to its last character.
+
+Example:
+```
+# matches packages org.luossfi.fo.bar and org.luossfi.foo.bar
+# but NOT org.luossfi.bar
+package "org.luossfi" ".foo"? ".bar" { ... }
+
+# matches packages org.luossfi.bar and org.luossfi.foo.bar
+package "org.luossfi" ( ".foo" )? ".bar" { ... }
+```
 ### Comments
-Comments are started with a \#-char and everything followed by this in the same line will be ignored. 
+Comments are started with a \#-char and everything followed by this in the same line will be ignored.
 
 ## Using the File Naming Watch Dog
 The usage of the watch dog is rather simple as only one class needs to be instantiated (only interesting parts of class added):
