@@ -35,7 +35,7 @@ public class ErrorMessageTranslator
 {
 
   /** The error message bundle's name. */
-  private static final String ERROR_MESSAGE_BUNDLE = "ErrorMessages";
+  private static final String ERROR_MESSAGE_BUNDLE = "org.luossfi.messages.fnwd.ErrorMessages";
 
   /**
    * Translate the input message key and replace the placeholders inside the
