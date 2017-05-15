@@ -23,7 +23,9 @@ package org.luossfi.watchdog.fnwd;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -40,9 +42,9 @@ import org.luossfi.internal.logic.fnwd.SourceDirectoryVisitor;
  * this library.
  * </p>
  * <p>
- * It takes in a convention definition file and the placeholder values for
- * it.<br>
- * It parses the definition file and stores the result internally.
+ * It takes in one or multiple convention definition files and the placeholder
+ * values for them.<br>
+ * It parses the definition files and stores the result internally.
  * </p>
  * <p>
  * The method {@link #check(Path)} takes in the source files root directory and
@@ -63,8 +65,8 @@ import org.luossfi.internal.logic.fnwd.SourceDirectoryVisitor;
 public class FileNamingWatchDog
 {
 
-  /** The definition file. */
-  private Path                definitionFile;
+  /** The definition files. */
+  private List<Path>          definitionFiles;
 
   /** The placeholder values. */
   private Map<String, String> placeholderValues;
@@ -73,8 +75,8 @@ public class FileNamingWatchDog
   private Set<PackageRule>    rules = null;
 
   /**
-   * Instantiates a new file naming checker for the input definition file and no
-   * placeholders.
+   * Instantiates a new file naming watch dog for the input (single) definition
+   * file and no placeholders.
    *
    * @param definitionFile the convention definition file
    */
@@ -84,8 +86,8 @@ public class FileNamingWatchDog
   }
 
   /**
-   * Instantiates a new file naming checker for the input definition file and
-   * placeholder values.
+   * Instantiates a new file naming watch dog for the input (single) definition
+   * file and placeholder values.
    *
    * @param definitionFile the convention definition file
    * @param placeholderValues the placeholder values for this definition file
@@ -94,9 +96,42 @@ public class FileNamingWatchDog
    */
   public FileNamingWatchDog( Path definitionFile, Map<String, String> placeholderValues )
   {
-    if ( definitionFile == null )
+    this( definitionFile != null ? Arrays.asList( definitionFile ) : null, placeholderValues );
+
+  }
+
+  /**
+   * Instantiates a new file naming watch dog for the input list of definition
+   * files and without any placeholders.
+   *
+   * @param definitionFiles list of definition files, must neither be null nor
+   *          empty
+   * @throws IllegalArgumentException if the input <code>definitionFiles</code>
+   *           is null or empty
+   * @since 1.1
+   */
+  public FileNamingWatchDog( List<Path> definitionFiles )
+  {
+    this( definitionFiles, Collections.emptyMap() );
+  }
+
+  /**
+   * Instantiates a new file naming watch dog for the input list of definition
+   * files and placeholder values.
+   *
+   * @param definitionFiles list of definition files, must neither be null nor
+   *          empty
+   * @param placeholderValues the placeholder values
+   * @throws IllegalArgumentException if the input <code>definitionFiles</code>
+   *           is null or empty or if the input <code>placeholderValues</code>
+   *           is null
+   * @since 1.1
+   */
+  public FileNamingWatchDog( List<Path> definitionFiles, Map<String, String> placeholderValues )
+  {
+    if ( definitionFiles == null || definitionFiles.isEmpty() )
     {
-      throw new IllegalArgumentException( "The definition file must not be null!" );
+      throw new IllegalArgumentException( "The definition files must not be null or empty!" );
     }
 
     if ( placeholderValues == null )
@@ -104,12 +139,12 @@ public class FileNamingWatchDog
       throw new IllegalArgumentException( "The placeholder values must not be null!" );
     }
 
-    this.definitionFile = definitionFile;
+    this.definitionFiles = definitionFiles;
     this.placeholderValues = placeholderValues;
   }
 
   /**
-   * Checks all packages and their files for compliance against this checkers
+   * Checks all packages and their files for compliance against this watch dog's
    * rules.
    *
    * @param sourceRootDirectory the root directory of the source files. This is
@@ -140,7 +175,7 @@ public class FileNamingWatchDog
 
     if ( rules == null )
     {
-      DefinitionFileParser parser = new DefinitionFileParser( definitionFile, placeholderValues );
+      DefinitionFileParser parser = new DefinitionFileParser( definitionFiles, placeholderValues );
       rules = parser.parse();
     }
 

@@ -35,7 +35,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 group 'org.luossfi.tools'
-version '1.0.2'
+version '1.1'
 
 targetCompatibility = '1.8'
 sourceCompatibility = '1.8'
@@ -45,7 +45,7 @@ repositories {
 }
 
 dependencies {
-  antlr 'org.antlr:antlr4:4.6'
+  antlr 'org.antlr:antlr4:4.7'
 }
 
 sourceSets {
@@ -64,7 +64,8 @@ generateGrammarSource {
 
 // ========== Gradle Wrapper ==========
 wrapper {
-  gradleVersion '3.3'
+  gradleVersion '3.5'
+  distributionType Wrapper.DistributionType.ALL
 }
 
 // ========== Maven Publishing ==========

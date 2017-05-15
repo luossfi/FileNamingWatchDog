@@ -21,6 +21,7 @@
 package org.luossfi.internal.parser.fnwd;
 
 import java.text.MessageFormat;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -47,18 +48,26 @@ import org.luossfi.internal.data.fnwd.PackageRule;
 
 /**
  * The Visitor used to convert the parse tree into a Set of PackageRule objects.
+ * This visitor can process multiple definition files. It will merge them
+ * together into one set of {@link PackageRule package rules}. Please be aware
+ * that the {@link #getErrors()} method should be called after each call to
+ * {@link #visitConventionDefinition(ConventionDefinitionContext)} method
+ * because the latter will reset the errors.
  *
  * @author Steff Lukas
- * @since 1.0
+ * @since 1.1
  */
-public class ConventionDefinitionVisitor extends ConventionDefinitionParserBaseVisitor<Set<PackageRule>>
+public class ConventionDefinitionVisitor extends ConventionDefinitionParserBaseVisitor<Void>
 {
 
   /** The placeholder values. */
-  private final Map<String, String> placeholderValues;
+  private final Map<String, String>      placeholderValues;
 
   /** The error messages. */
-  private final List<String>        errors;
+  private List<String>                   errors;
+
+  /** The collected rules. */
+  private final Map<String, PackageRule> rules;
 
   /**
    * Instantiates a new convention definition visitor.
@@ -67,12 +76,15 @@ public class ConventionDefinitionVisitor extends ConventionDefinitionParserBaseV
    */
   public ConventionDefinitionVisitor( final Map<String, String> placeholderValues )
   {
-    this.placeholderValues = placeholderValues;
-    this.errors = new LinkedList<>();
+    this.placeholderValues = placeholderValues != null ? placeholderValues : Collections.emptyMap();
+    this.rules = new LinkedHashMap<>();
   }
 
   /**
-   * Gets the error messages.
+   * Gets the error messages. Please be aware that each call to
+   * {@link #visitConventionDefinition(ConventionDefinitionContext)} method will
+   * reset the content of the returned list. If multiple convention definitions
+   * are done with this parser then collect the errors after each round!
    *
    * @return a list of error messages if any, or an empty list
    */
@@ -81,24 +93,42 @@ public class ConventionDefinitionVisitor extends ConventionDefinitionParserBaseV
     return errors;
   }
 
+  /**
+   * Get the package rule set from this visitor. If the visitor has been used
+   * for multiple inputs then the set will contain the merged rules from all the
+   * inputs.
+   *
+   * @return the (merged) set of package rules
+   */
+  public Set<PackageRule> getPackageRules()
+  {
+    Set<PackageRule> packageRules = new LinkedHashSet<>();
+
+    for ( PackageRule packageRule : rules.values() )
+    {
+      packageRules.add( packageRule );
+    }
+
+    return packageRules;
+  }
+
   /** {@inheritDoc} */
   @Override
-  public Set<PackageRule> visitConventionDefinition( ConventionDefinitionContext ctx )
+  public Void visitConventionDefinition( ConventionDefinitionContext ctx )
   {
-    LinkedHashMap<String, PackageRule> patternToRule = new LinkedHashMap<>();
-
+    errors = new LinkedList<>();
     StringVisitor stringVisitor = new StringVisitor();
     List<PackageDefinitionContext> packageDefinitions = ctx.packageDefinition();
 
     for ( PackageDefinitionContext packageDefinitionContext : packageDefinitions )
     {
       String pattern = stringVisitor.visitAlternatives( packageDefinitionContext.alternatives() );
-      PackageRule packageRule = patternToRule.get( pattern );
+      PackageRule packageRule = rules.get( pattern );
 
       if ( packageRule == null )
       {
         packageRule = new PackageRule( pattern );
-        patternToRule.put( pattern, packageRule );
+        rules.put( pattern, packageRule );
       }
 
       List<FileDefinitionContext> fileDefinitions = packageDefinitionContext.fileDefinition();
@@ -110,17 +140,12 @@ public class ConventionDefinitionVisitor extends ConventionDefinitionParserBaseV
       }
 
     }
-
-    Set<PackageRule> packageRules = new LinkedHashSet<>();
-
-    for ( PackageRule packageRule : patternToRule.values() )
-    {
-      packageRules.add( packageRule );
-    }
-
-    return packageRules;
+    return null;
   }
 
+  /**
+   * Internal visitor implementation which returns String values.
+   */
   private class StringVisitor extends ConventionDefinitionParserBaseVisitor<String>
   {
     /** {@inheritDoc} */
