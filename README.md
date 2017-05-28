@@ -44,7 +44,7 @@ package "org.luossfi." ([a-z0-9]+ "." )* "%PROJECT%"
 ## Getting File Naming Watch Dog
 **File Naming Watch Dog** is available on [Bintray's jCenter repository](https://bintray.com/bintray/jcenter).
 
-Maven GAV: [org.luossfi.tools:FileNamingWatchDog:1.0.2](https://bintray.com/luossfi/org.luossfi/FileNamingWatchDog/1.0.2)
+Maven GAV: [org.luossfi.tools:FileNamingWatchDog:1.1](https://bintray.com/luossfi/org.luossfi/FileNamingWatchDog/1.1)
 
 ## Further Documentation
 Please see the [documentation](./doc/FileNamingWatchDog.md).
