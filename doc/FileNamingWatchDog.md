@@ -35,7 +35,7 @@ It is not allowed to nest a package rule inside another package rule.
 | `% %` | A placeholder inside a string. The placeholder's name may be anything but the %-char itself. |
 | `[ ]` | A character group. This defines a set of allowed characters for one single char. Ranges are defined by putting the '-'-char between the start and the end. If the '-'-char itself is part of the group then it must appear as the very first char in the group. |
 | `( )` | Groups together multiple rule elements |
-| `|` | Separates alternatives from each other. |
+| <code>&#124;</code> | Separates alternatives from each other. |
 | `*` | Greedy zero or more times multiplier |
 | `?` | Greedy zero or one times multiplier |
 | `+` | Greedy one or more times multiplier |
@@ -94,7 +94,7 @@ public class MyWatchDog
 
 ### The File Naming Watch Dog's Result Map Explained
 Each call to `org.luossfi.watchdog.fnwd.FileNamingWatchDog.check(Path)` returns a `java.util.Map`.
-This map is empty if no naming convention violations were found. If the map is not empty the following case occur:
+This map is empty if no naming convention violations were found. If the map is not empty the following cases occur:
 
 * package name -&gt; empty set:
 
@@ -103,4 +103,102 @@ This map is empty if no naming convention violations were found. If the map is n
  The package name does **not** violate the conventions, however it contains files which violate the file rules
  defined in the **first** package rule to which the packaged complied to.
 
+### Using Multiple Definition Files
+From version 1.1 on it is possible to have multiple definition files merged together before checking. This is useful
+if e.g. a general definition file is used for many projects but some of them require some additional rules. 
 
+**Note:**  
+This feature does not provide any means of rewriting any rules, it simply adds new stuff at the end.
+
+Example
+```
+# general config file
+
+# Only Java source files allowed here which must be suffixed with 'Test'.
+package "org.luossfi.test.%PROJECT%"
+{
+  file [A-Z][a-zA-Z0-9]* "Test.java"
+}
+
+# This more general definition is used as fallback.
+package "org.luossfi." ([a-z0-9]+ "." )* "%PROJECT%"
+{
+  file [A-Z][a-zA-Z0-9]* ".java"
+}
+```
+
+```
+# Special config file for 'foo' project
+
+# In test package also 'TestFoo' is allowed as suffix.
+package "org.luossfi.test.foo"
+{
+  file [A-Z][a-zA-Z0-9]* "TestFoo.java"
+}
+```
+
+
+Merge results:  
+Case `%PROJECT%` has the value `foo`
+```
+package "org.luossfi.test.foo"
+{
+  file [A-Z][a-zA-Z0-9]* "Test.java"
+  file [A-Z][a-zA-Z0-9]* "TestFoo.java" # Additional rule added here
+}
+
+# This more general definition is used as fallback.
+package "org.luossfi." ([a-z0-9]+ "." )* "%PROJECT%"
+{
+  file [A-Z][a-zA-Z0-9]* ".java"
+}
+```
+Case `%PROJECT%` has the value `bar`
+```
+package "org.luossfi.test.bar"
+{
+  file [A-Z][a-zA-Z0-9]* "Test.java"
+}
+
+# This more general definition is used as fallback.
+package "org.luossfi." ([a-z0-9]+ "." )* "%PROJECT%"
+{
+  file [A-Z][a-zA-Z0-9]* ".java"
+}
+
+# Additional rule added here
+package "org.luossfi.test.foo"
+{
+  file [A-Z][a-zA-Z0-9]* "TestFoo.java"
+}
+```
+
+Usage of multiple definition files in the code (only interesting parts of class added):
+
+```java
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.luossfi.watchdog.fnwd.FileNamingWatchDog;
+
+// More imports of course
+
+// Static example-code
+public class MyWatchDog
+{
+  public static void myChecking( List<Path> definitionFiles, Map<String, String> placeholderValues, Path... sourceDirsToCheck )
+  {
+    FileNamingWatchDog watchDog = new FileNamingWatchDog( definitionFiles, placeholderValues );
+    
+    for( Path currentDir : sourceDirsToCheck )
+    {
+      Map<String, Set<String>> checkResult = watchDog.check( currentDir );
+      
+      //TODO: Do something with the returned checkResult
+    }
+  }
+}
+
+```
