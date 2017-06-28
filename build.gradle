@@ -64,8 +64,8 @@ generateGrammarSource {
 
 // ========== Gradle Wrapper ==========
 wrapper {
-  gradleVersion '3.5'
-  distributionType Wrapper.DistributionType.ALL
+  gradleVersion '4.0'
+  distributionType Wrapper.DistributionType.BIN
 }
 
 // ========== Maven Publishing ==========
