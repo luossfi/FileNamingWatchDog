@@ -17,10 +17,13 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.luossfi.internal.logic.fnwd;
+package org.luossfi.exception.fnwd;
 
-import java.text.MessageFormat;
+import static java.text.MessageFormat.format;
+import static java.util.ResourceBundle.getBundle;
+
 import java.util.MissingResourceException;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 /**
@@ -31,7 +34,7 @@ import java.util.ResourceBundle;
  * @author Steff Lukas
  * @since 1.0
  */
-public class ErrorMessageTranslator
+public final class ErrorMessageTranslator
 {
 
   /** The error message bundle's name. */
@@ -45,24 +48,26 @@ public class ErrorMessageTranslator
    * @param arguments the arguments
    * @return the translated and replaced message or the messageKey if no
    *         translation could be found or the message bundle could not be
-   *         instanciated.
+   *         instantiated.
    */
-  public static String translate( String messageKey, Object... arguments )
+  public static Optional<String> translate( final String messageKey, final Object... arguments )
   {
-    String translation;
+    Optional<String> translation;
     try
     {
-      ResourceBundle bundle = ResourceBundle.getBundle( ERROR_MESSAGE_BUNDLE );
-      translation = bundle.getString( messageKey );
+      ResourceBundle bundle = getBundle( ERROR_MESSAGE_BUNDLE );
+      String messageText = bundle.getString( messageKey );
 
       if ( arguments.length > 0 )
       {
-        translation = MessageFormat.format( translation, arguments );
+        messageText = format( messageText, arguments );
       }
+
+      translation = Optional.of( messageText );
     }
     catch ( MissingResourceException e )
     {
-      translation = messageKey;
+      translation = Optional.empty();
     }
 
     return translation;

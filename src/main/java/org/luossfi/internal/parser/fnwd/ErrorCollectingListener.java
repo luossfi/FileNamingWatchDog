@@ -19,6 +19,8 @@
  */
 package org.luossfi.internal.parser.fnwd;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,20 +49,16 @@ public class ErrorCollectingListener extends BaseErrorListener
    */
   public List<String> getErrors()
   {
-    return errors;
+    return unmodifiableList( errors );
   }
 
   /** {@inheritDoc} */
   @Override
-  public void syntaxError( Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e )
+  public void syntaxError( final Recognizer<?, ?> recognizer, final Object offendingSymbol, final int line, final int charPositionInLine,
+      final String msg, final RecognitionException e )
   {
-    StringBuilder message = new StringBuilder( msg.length() + 16 );
-    message.append( "line " );
-    message.append( line );
-    message.append( ':' );
-    message.append( charPositionInLine );
-    message.append( ' ' );
-    message.append( msg );
+    final StringBuilder message = new StringBuilder( msg.length() + 16 );
+    message.append( "line " ).append( line ).append( ':' ).append( charPositionInLine ).append( ' ' ).append( msg );
     errors.add( message.toString() );
   }
 

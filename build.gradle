@@ -25,6 +25,7 @@ buildscript {
   
   dependencies {
     classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+    classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
   }
 }
 
@@ -33,12 +34,15 @@ apply plugin: 'eclipse'
 apply plugin: 'antlr'
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
+apply plugin: 'org.junit.platform.gradle.plugin'
 
 group 'org.luossfi.tools'
-version '1.1'
+version '1.2'
 
 targetCompatibility = '1.8'
 sourceCompatibility = '1.8'
+
+configurations.create( 'eclipse' )
 
 repositories {
   jcenter()
@@ -46,25 +50,41 @@ repositories {
 
 dependencies {
   antlr 'org.antlr:antlr4:4.7'
+  runtime 'org.antlr:antlr4-runtime:4.7'
+  
+  testCompile 'org.junit.jupiter:junit-jupiter-api:5.0.0'
+  testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.0.0'
+  eclipse 'org.junit.platform:junit-platform-runner:1.0.0'
+  
+  testCompile 'org.assertj:assertj-core:3.8.0'
+  
+  testCompile 'com.google.jimfs:jimfs:1.1'
 }
 
 sourceSets {
   main {
     java {
-      srcDir "$buildDir/generated-src/antlr/"
+      srcDir "$projectDir/generated/antlr/"
     }
   }
 }
 
 // ========== ANTLR ==========
 generateGrammarSource {
-  outputDirectory = file("$buildDir/generated-src/antlr/org/luossfi/gen/antlr/fnwd")
+  outputDirectory = file("$projectDir/generated/antlr/org/luossfi/gen/antlr/fnwd")
   arguments += ["-visitor", "-no-listener"]
+}
+
+// ========== Junit5 Configuration ==========
+junitPlatform {
+  selectors {
+    aPackage 'org.luossfi.test'
+  }
 }
 
 // ========== Gradle Wrapper ==========
 wrapper {
-  gradleVersion '4.0'
+  gradleVersion '4.2.1'
   distributionType Wrapper.DistributionType.BIN
 }
 
@@ -121,26 +141,26 @@ if(file('./publishing.gradle').exists())
 // ========== Eclipse ==========
 eclipse {
   classpath {
+    plusConfigurations += [ configurations.eclipse ]
+
     downloadSources = true
     downloadJavadoc = true
   }
 }
 
-eclipseJdt {
-  doLast {
-    File prefsResources = file('.settings/org.eclipse.core.resources.prefs')
-    prefsResources.write('eclipse.preferences.version=1\r\n')
-    prefsResources.append('encoding/<project>=UTF-8')
+tasks[ 'eclipse' ].doLast {
+  File prefsResources = file('.settings/org.eclipse.core.resources.prefs')
+  prefsResources.write('eclipse.preferences.version=1\r\n')
+  prefsResources.append('encoding/<project>=UTF-8')
   
-    File prefsRuntime = file('.settings/org.eclipse.core.runtime.prefs')
-    prefsRuntime.write('eclipse.preferences.version=1\r\n')
-    prefsRuntime.append('line.separator=\\r\\n')
+  File prefsRuntime = file('.settings/org.eclipse.core.runtime.prefs')
+  prefsRuntime.write('eclipse.preferences.version=1\r\n')
+  prefsRuntime.append('line.separator=\\r\\n')
   
-    File prefsJdtUi = file('.settings/org.eclipse.jdt.ui.prefs')
-    prefsJdtUi.write('eclipse.preferences.version=1\r\n')
-    prefsJdtUi.append('org.eclipse.jdt.ui.javadoc=true\r\n')
-    prefsJdtUi.append('org.eclipse.jdt.ui.text.custom_code_templates=<?xml version\\="1.0" encoding\\="UTF-8" standalone\\="no"?><templates><template autoinsert\\="false" context\\="gettercomment_context" deleted\\="false" description\\="Comment for getter method" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.gettercomment" name\\="gettercomment"/><template autoinsert\\="false" context\\="settercomment_context" deleted\\="false" description\\="Comment for setter method" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.settercomment" name\\="settercomment"/><template autoinsert\\="false" context\\="constructorcomment_context" deleted\\="false" description\\="Comment for created constructors" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.constructorcomment" name\\="constructorcomment"/><template autoinsert\\="false" context\\="filecomment_context" deleted\\="false" description\\="Comment for created Java files" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.filecomment" name\\="filecomment">/*\\n * FileNamingWatchDog, a library for checking Java packages and source file\\n * names for compliance to naming conventions.\\n *\\n * Copyright (C) ${year}++ ${user}\\n *\\n* This program is free software\\: you can redistribute it and/or modify it under\\n * the terms of the GNU Lesser General Public License as published by the Free\\n * Software Foundation, either version 3 of the License, or (at your option) any\\n * later version.\\n *\\n * This program is distributed in the hope that it will be useful, but WITHOUT\\n * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\\n * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more\\n * details.\\n *\\n * You should have received a copy of the GNU Lesser General Public License\\n * along with this program. If not, see &lt;http\\://www.gnu.org/licenses/&gt;.\\n */</template><template autoinsert\\="false" context\\="typecomment_context" deleted\\="false" description\\="Comment for created types" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.typecomment" name\\="typecomment">/**\\n * @author Steff Lukas\\n *\\n * ${tags}\\n */</template><template autoinsert\\="false" context\\="fieldcomment_context" deleted\\="false" description\\="Comment for fields" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.fieldcomment" name\\="fieldcomment"/><template autoinsert\\="false" context\\="methodcomment_context" deleted\\="false" description\\="Comment for non-overriding methods" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.methodcomment" name\\="methodcomment"/><template autoinsert\\="false" context\\="overridecomment_context" deleted\\="false" description\\="Comment for overriding methods" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.overridecomment" name\\="overridecomment">/** {@inheritDoc} */</template><template autoinsert\\="false" context\\="delegatecomment_context" deleted\\="false" description\\="Comment for delegate methods" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.delegatecomment" name\\="delegatecomment"/><template autoinsert\\="true" context\\="newtype_context" deleted\\="false" description\\="Newly created files" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.newtype" name\\="newtype">${filecomment}\\n${package_declaration}\\n\\n${typecomment}\\n${type_declaration}</template><template autoinsert\\="true" context\\="classbody_context" deleted\\="false" description\\="Code in new class type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.classbody" name\\="classbody">\\n</template><template autoinsert\\="true" context\\="interfacebody_context" deleted\\="false" description\\="Code in new interface type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.interfacebody" name\\="interfacebody">\\n</template><template autoinsert\\="true" context\\="enumbody_context" deleted\\="false" description\\="Code in new enum type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.enumbody" name\\="enumbody">\\n</template><template autoinsert\\="true" context\\="annotationbody_context" deleted\\="false" description\\="Code in new annotation type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.annotationbody" name\\="annotationbody">\\n</template><template autoinsert\\="true" context\\="catchblock_context" deleted\\="false" description\\="Code in new catch blocks" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.catchblock" name\\="catchblock">// ${todo} Auto-generated catch block\\n${exception_var}.printStackTrace();</template><template autoinsert\\="true" context\\="methodbody_context" deleted\\="false" description\\="Code in created method stubs" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.methodbody" name\\="methodbody">// ${todo} Auto-generated method stub\\n${body_statement}</template><template autoinsert\\="true" context\\="constructorbody_context" deleted\\="false" description\\="Code in created constructor stubs" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.constructorbody" name\\="constructorbody">${body_statement}\\n// ${todo} Auto-generated constructor stub</template><template autoinsert\\="true" context\\="getterbody_context" deleted\\="false" description\\="Code in created getters" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.getterbody" name\\="getterbody">return ${field};</template><template autoinsert\\="true" context\\="setterbody_context" deleted\\="false" description\\="Code in created setters" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.setterbody" name\\="setterbody">${field} \\= ${param};</template></templates>')
-  }
+  File prefsJdtUi = file('.settings/org.eclipse.jdt.ui.prefs')
+  prefsJdtUi.write('eclipse.preferences.version=1\r\n')
+  prefsJdtUi.append('org.eclipse.jdt.ui.javadoc=true\r\n')
+  prefsJdtUi.append('org.eclipse.jdt.ui.text.custom_code_templates=<?xml version\\="1.0" encoding\\="UTF-8" standalone\\="no"?><templates><template autoinsert\\="false" context\\="gettercomment_context" deleted\\="false" description\\="Comment for getter method" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.gettercomment" name\\="gettercomment"/><template autoinsert\\="false" context\\="settercomment_context" deleted\\="false" description\\="Comment for setter method" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.settercomment" name\\="settercomment"/><template autoinsert\\="false" context\\="constructorcomment_context" deleted\\="false" description\\="Comment for created constructors" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.constructorcomment" name\\="constructorcomment"/><template autoinsert\\="false" context\\="filecomment_context" deleted\\="false" description\\="Comment for created Java files" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.filecomment" name\\="filecomment">/*\\n * FileNamingWatchDog, a library for checking Java packages and source file\\n * names for compliance to naming conventions.\\n *\\n * Copyright (C) ${year}++ ${user}\\n *\\n* This program is free software\\: you can redistribute it and/or modify it under\\n * the terms of the GNU Lesser General Public License as published by the Free\\n * Software Foundation, either version 3 of the License, or (at your option) any\\n * later version.\\n *\\n * This program is distributed in the hope that it will be useful, but WITHOUT\\n * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\\n * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more\\n * details.\\n *\\n * You should have received a copy of the GNU Lesser General Public License\\n * along with this program. If not, see &lt;http\\://www.gnu.org/licenses/&gt;.\\n */</template><template autoinsert\\="false" context\\="typecomment_context" deleted\\="false" description\\="Comment for created types" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.typecomment" name\\="typecomment">/**\\n * @author Steff Lukas\\n *\\n * ${tags}\\n */</template><template autoinsert\\="false" context\\="fieldcomment_context" deleted\\="false" description\\="Comment for fields" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.fieldcomment" name\\="fieldcomment"/><template autoinsert\\="false" context\\="methodcomment_context" deleted\\="false" description\\="Comment for non-overriding methods" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.methodcomment" name\\="methodcomment"/><template autoinsert\\="false" context\\="overridecomment_context" deleted\\="false" description\\="Comment for overriding methods" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.overridecomment" name\\="overridecomment">/** {@inheritDoc} */</template><template autoinsert\\="false" context\\="delegatecomment_context" deleted\\="false" description\\="Comment for delegate methods" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.delegatecomment" name\\="delegatecomment"/><template autoinsert\\="true" context\\="newtype_context" deleted\\="false" description\\="Newly created files" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.newtype" name\\="newtype">${filecomment}\\n${package_declaration}\\n\\n${typecomment}\\n${type_declaration}</template><template autoinsert\\="true" context\\="classbody_context" deleted\\="false" description\\="Code in new class type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.classbody" name\\="classbody">\\n</template><template autoinsert\\="true" context\\="interfacebody_context" deleted\\="false" description\\="Code in new interface type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.interfacebody" name\\="interfacebody">\\n</template><template autoinsert\\="true" context\\="enumbody_context" deleted\\="false" description\\="Code in new enum type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.enumbody" name\\="enumbody">\\n</template><template autoinsert\\="true" context\\="annotationbody_context" deleted\\="false" description\\="Code in new annotation type bodies" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.annotationbody" name\\="annotationbody">\\n</template><template autoinsert\\="true" context\\="catchblock_context" deleted\\="false" description\\="Code in new catch blocks" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.catchblock" name\\="catchblock">// ${todo} Auto-generated catch block\\n${exception_var}.printStackTrace();</template><template autoinsert\\="true" context\\="methodbody_context" deleted\\="false" description\\="Code in created method stubs" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.methodbody" name\\="methodbody">// ${todo} Auto-generated method stub\\n${body_statement}</template><template autoinsert\\="true" context\\="constructorbody_context" deleted\\="false" description\\="Code in created constructor stubs" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.constructorbody" name\\="constructorbody">${body_statement}\\n// ${todo} Auto-generated constructor stub</template><template autoinsert\\="true" context\\="getterbody_context" deleted\\="false" description\\="Code in created getters" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.getterbody" name\\="getterbody">return ${field};</template><template autoinsert\\="true" context\\="setterbody_context" deleted\\="false" description\\="Code in created setters" enabled\\="true" id\\="org.eclipse.jdt.ui.text.codetemplates.setterbody" name\\="setterbody">${field} \\= ${param};</template></templates>')
 }
 
 // ========== Jar Manifest ==========

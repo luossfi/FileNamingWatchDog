@@ -60,7 +60,11 @@ expression
   ;
 
 simpleExpression
-  : STRING_OPEN ( STRING_LITERAL | PLACEHOLDER )* STRING_CLOSE      #stringExpr
+  : STRING_OPEN ( stringContent )* STRING_CLOSE                     #stringExpr
   | WILDCARD                                                        #wildcardExpr
   | CHAR_GROUP_OPEN ( CHAR_RANGE | SINGLE_CHAR )* CHAR_GROUP_CLOSE  #charGroupExpr
+  ;
+
+stringContent
+  : STRING_LITERAL | PLACEHOLDER
   ;

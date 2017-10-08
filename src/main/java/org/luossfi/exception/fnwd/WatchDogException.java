@@ -38,7 +38,7 @@ public class WatchDogException extends Exception
    * @param message the message to display
    * @param cause the original cause
    */
-  public WatchDogException( String message, Exception cause )
+  public WatchDogException( final String message, final Exception cause )
   {
     super( message, cause );
   }
@@ -48,7 +48,7 @@ public class WatchDogException extends Exception
    *
    * @param message the message to display
    */
-  public WatchDogException( String message )
+  public WatchDogException( final String message )
   {
     super( message );
   }

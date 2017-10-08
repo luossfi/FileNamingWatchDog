@@ -20,21 +20,33 @@
 
 package org.luossfi.watchdog.fnwd;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
+import static java.util.stream.StreamSupport.stream;
+import static org.luossfi.exception.fnwd.ErrorMessageConstants.FILE_WALK_ERROR;
+import static org.luossfi.exception.fnwd.ErrorMessageConstants.SCR_ROOT_DIR_NOT_EXISTING;
+import static org.luossfi.exception.fnwd.ErrorMessageTranslator.translate;
+import static org.luossfi.internal.packagefinder.fnwd.PackageFinder.findPackages;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 
-import org.luossfi.exception.fnwd.ErrorMessageConstants;
 import org.luossfi.exception.fnwd.WatchDogException;
-import org.luossfi.internal.data.fnwd.PackageRule;
-import org.luossfi.internal.logic.fnwd.DefinitionFileParser;
-import org.luossfi.internal.logic.fnwd.ErrorMessageTranslator;
-import org.luossfi.internal.logic.fnwd.SourceDirectoryVisitor;
+import org.luossfi.internal.parser.data.fnwd.FileRule;
+import org.luossfi.internal.parser.data.fnwd.PackageRule;
+import org.luossfi.internal.parser.fnwd.DefinitionFileParser;
 
 /**
  * <p>
@@ -66,13 +78,13 @@ public class FileNamingWatchDog
 {
 
   /** The definition files. */
-  private List<Path>          definitionFiles;
+  private final List<Path>          definitionFiles;
 
   /** The placeholder values. */
-  private Map<String, String> placeholderValues;
+  private final Map<String, String> placeholderValues;
 
   /** The rule set parsed from the definition file. */
-  private Set<PackageRule>    rules = null;
+  private List<PackageRule>         rules = null;
 
   /**
    * Instantiates a new file naming watch dog for the input (single) definition
@@ -80,9 +92,9 @@ public class FileNamingWatchDog
    *
    * @param definitionFile the convention definition file
    */
-  public FileNamingWatchDog( Path definitionFile )
+  public FileNamingWatchDog( final Path definitionFile )
   {
-    this( definitionFile, Collections.emptyMap() );
+    this( definitionFile, emptyMap() );
   }
 
   /**
@@ -94,10 +106,9 @@ public class FileNamingWatchDog
    * @throws IllegalArgumentException if the definition file is null or if the
    *           placeholder values is null
    */
-  public FileNamingWatchDog( Path definitionFile, Map<String, String> placeholderValues )
+  public FileNamingWatchDog( final Path definitionFile, final Map<String, String> placeholderValues )
   {
-    this( definitionFile != null ? Arrays.asList( definitionFile ) : null, placeholderValues );
-
+    this( definitionFile != null ? singletonList( definitionFile ) : null, placeholderValues );
   }
 
   /**
@@ -110,9 +121,9 @@ public class FileNamingWatchDog
    *           is null or empty
    * @since 1.1
    */
-  public FileNamingWatchDog( List<Path> definitionFiles )
+  public FileNamingWatchDog( final List<Path> definitionFiles )
   {
-    this( definitionFiles, Collections.emptyMap() );
+    this( definitionFiles, emptyMap() );
   }
 
   /**
@@ -127,7 +138,7 @@ public class FileNamingWatchDog
    *           is null
    * @since 1.1
    */
-  public FileNamingWatchDog( List<Path> definitionFiles, Map<String, String> placeholderValues )
+  public FileNamingWatchDog( final List<Path> definitionFiles, final Map<String, String> placeholderValues )
   {
     if ( definitionFiles == null || definitionFiles.isEmpty() )
     {
@@ -158,40 +169,81 @@ public class FileNamingWatchDog
    *           directory does not exist or is not a directory.
    * @throws IllegalArgumentException if the source root directory is null
    */
-  public Map<String, Set<String>> check( Path sourceRootDirectory ) throws WatchDogException
+  public Map<String, Set<String>> check( final Path sourceRootDirectory ) throws WatchDogException
   {
-    if ( sourceRootDirectory == null )
-    {
-      throw new IllegalArgumentException( "The source root directory must not be null!" );
-    }
+    requireNonNull( sourceRootDirectory, "The source root directory must not be null!" );
 
-    Path normalizedRoot = sourceRootDirectory.normalize();
+    final Path normalizedRoot = sourceRootDirectory.normalize();
 
     if ( !Files.exists( sourceRootDirectory ) || !Files.isDirectory( sourceRootDirectory ) )
     {
-      String message = ErrorMessageTranslator.translate( ErrorMessageConstants.SCR_ROOT_DIR_NOT_EXISTING, normalizedRoot );
-      throw new WatchDogException( message );
+      throw new WatchDogException( translate( SCR_ROOT_DIR_NOT_EXISTING, normalizedRoot ).orElse( SCR_ROOT_DIR_NOT_EXISTING ) );
     }
 
     if ( rules == null )
     {
-      DefinitionFileParser parser = new DefinitionFileParser( definitionFiles, placeholderValues );
+      final DefinitionFileParser parser = new DefinitionFileParser( definitionFiles, placeholderValues );
       rules = parser.parse();
     }
 
-    SourceDirectoryVisitor visitor = new SourceDirectoryVisitor( normalizedRoot, rules );
-
+    Map<Path, Set<Path>> packages;
     try
     {
-      Files.walkFileTree( normalizedRoot, visitor );
+      packages = findPackages( normalizedRoot );
     }
-    catch ( IOException e )
+    catch ( final IOException e )
     {
-      String message = ErrorMessageTranslator.translate( ErrorMessageConstants.FILE_WALK_ERROR, normalizedRoot.toString(), e.getLocalizedMessage() );
+      final String message = translate( FILE_WALK_ERROR, normalizedRoot.toString(), e.getLocalizedMessage() ).orElse( FILE_WALK_ERROR );
       throw new WatchDogException( message, e );
     }
 
-    return visitor.getComplianceIssues();
+    final Map<String, Set<String>> complianceIssues = findComplianceIssues( packages );
+
+    return complianceIssues;
+  }
+
+  private Map<String, Set<String>> findComplianceIssues( final Map<Path, Set<Path>> packages )
+  {
+    final Map<String, Set<String>> complianceIssues = new TreeMap<>();
+
+    for ( final Entry<Path, Set<Path>> packageEntry : packages.entrySet() )
+    {
+      final String packageName = pathToPackage( packageEntry.getKey() );
+      final Optional<PackageRule> matchingRule = rules.stream().filter( rule -> rule.testCompliance( packageName ) ).findFirst();
+      if ( matchingRule.isPresent() )
+      {
+        final Set<String> nonCompliantFiles = checkFiles( packageEntry.getValue(), matchingRule.get().getFileRules() );
+        if ( !nonCompliantFiles.isEmpty() )
+        {
+          complianceIssues.put( packageName, nonCompliantFiles );
+        }
+      }
+      else
+      {
+        complianceIssues.put( packageName, emptySet() );
+      }
+
+    }
+    return complianceIssues;
+  }
+
+  private String pathToPackage( final Path toConvert )
+  {
+    return stream( toConvert.spliterator(), false ).map( Path::toString ).collect( joining( "." ) );
+  }
+
+  /**
+   * Checks the input {@code files} for compliance against the input
+   * {@code fileRules}.
+   *
+   * @param files the files to check
+   * @param fileRules the file rules to check against
+   * @return the set of non-compliant file names
+   */
+  private Set<String> checkFiles( final Collection<Path> files, final Collection<FileRule> fileRules )
+  {
+    return files.stream().map( Path::toString ).filter( file -> fileRules.stream().noneMatch( rule -> rule.testCompliance( file ) ) ).collect(
+        toSet() );
   }
 
 }

@@ -18,38 +18,44 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.luossfi.internal.logic.fnwd;
+package org.luossfi.internal.parser.fnwd;
+
+import static java.lang.System.lineSeparator;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Stream.concat;
+import static org.luossfi.exception.fnwd.ErrorMessageConstants.DEF_FILE_NOT_EXISTING;
+import static org.luossfi.exception.fnwd.ErrorMessageConstants.DEF_FILE_READ_FAILED;
+import static org.luossfi.exception.fnwd.ErrorMessageConstants.PARSING_ERRORS;
+import static org.luossfi.exception.fnwd.ErrorMessageTranslator.translate;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.luossfi.exception.fnwd.ErrorMessageConstants;
 import org.luossfi.exception.fnwd.WatchDogException;
 import org.luossfi.gen.antlr.fnwd.ConventionDefinitionLexer;
 import org.luossfi.gen.antlr.fnwd.ConventionDefinitionParser;
-import org.luossfi.internal.data.fnwd.FileRule;
-import org.luossfi.internal.data.fnwd.PackageRule;
-import org.luossfi.internal.parser.fnwd.ConventionDefinitionVisitor;
-import org.luossfi.internal.parser.fnwd.ErrorCollectingListener;
+import org.luossfi.internal.parser.data.fnwd.PackageRule;
+import org.luossfi.internal.parser.data.fnwd.RegExpFileRuleImpl;
+import org.luossfi.internal.parser.data.fnwd.RegExpPackageRuleImpl;
 
 /**
  * <p>
  * The definition file parser takes in one or more paths to definition files and
  * a map of placeholder values. The rules defined in the files are put to the
- * resulting Set of {@link PackageRule PackageRules} in the same ordering as
- * they first appeared. Equal rules are merged. The same thing applies for the
- * {@link FileRule FileRules} which are part of each {@link PackageRule}.
+ * resulting Set of {@link RegExpPackageRuleImpl PackageRules} in the same
+ * ordering as they first appeared. Equal rules are merged. The same thing
+ * applies for the {@link RegExpFileRuleImpl FileRules} which are part of each
+ * {@link RegExpPackageRuleImpl}.
  * </p>
  * <p>
  * The placeholders are replaced during the parse process, so the resulting
@@ -78,9 +84,9 @@ public class DefinitionFileParser
    * @throws WatchDogException if the input definition file does not exist
    * @throws IllegalArgumentException if the input definition file is null
    */
-  public DefinitionFileParser( Path definitionFile ) throws WatchDogException
+  public DefinitionFileParser( final Path definitionFile ) throws WatchDogException
   {
-    this( definitionFile, Collections.emptyMap() );
+    this( definitionFile, emptyMap() );
   }
 
   /**
@@ -91,9 +97,9 @@ public class DefinitionFileParser
    * @throws WatchDogException if the input definition file does not exist
    * @throws IllegalArgumentException if the input definition file is null
    */
-  public DefinitionFileParser( Path definitionFile, Map<String, String> placeholderValues ) throws WatchDogException
+  public DefinitionFileParser( final Path definitionFile, final Map<String, String> placeholderValues ) throws WatchDogException
   {
-    this( Arrays.asList( definitionFile ), placeholderValues );
+    this( singletonList( definitionFile ), placeholderValues );
   }
 
   /**
@@ -105,7 +111,7 @@ public class DefinitionFileParser
    * @throws IllegalArgumentException if the input definition file is null
    * @since 1.1
    */
-  public DefinitionFileParser( List<Path> definitionFiles, Map<String, String> placeholderValues ) throws WatchDogException
+  public DefinitionFileParser( final List<Path> definitionFiles, final Map<String, String> placeholderValues ) throws WatchDogException
   {
     checkAndNormalizePathList( definitionFiles );
     this.definitionFiles = definitionFiles;
@@ -121,24 +127,24 @@ public class DefinitionFileParser
    *           files cannot be accessed by the parser or if the parser found
    *           syntax problems.
    */
-  public Set<PackageRule> parse() throws WatchDogException
+  public List<PackageRule> parse() throws WatchDogException
   {
 
-    ConventionDefinitionVisitor visitor = new ConventionDefinitionVisitor( placeholderValues );
+    final ConventionDefinitionVisitor visitor = new ConventionDefinitionVisitor( placeholderValues );
 
-    for ( Path definitionFile : definitionFiles )
+    for ( final Path definitionFile : definitionFiles )
     {
-      try ( InputStreamReader reader = new InputStreamReader( Files.newInputStream( definitionFile ), "UTF-8" ) )
+      try ( final InputStreamReader reader = new InputStreamReader( Files.newInputStream( definitionFile ), "UTF-8" ) )
       {
-        CharStream antlrInputStream = CharStreams.fromReader( reader, definitionFile.getFileName().toString() );
+        final CharStream antlrInputStream = CharStreams.fromReader( reader, definitionFile.getFileName().toString() );
 
-        ErrorCollectingListener listener = new ErrorCollectingListener();
+        final ErrorCollectingListener listener = new ErrorCollectingListener();
 
-        ConventionDefinitionLexer lexer = new ConventionDefinitionLexer( antlrInputStream );
+        final ConventionDefinitionLexer lexer = new ConventionDefinitionLexer( antlrInputStream );
         lexer.removeErrorListeners();
         lexer.addErrorListener( listener );
 
-        ConventionDefinitionParser parser = new ConventionDefinitionParser( new CommonTokenStream( lexer ) );
+        final ConventionDefinitionParser parser = new ConventionDefinitionParser( new CommonTokenStream( lexer ) );
         parser.removeErrorListeners();
         parser.addErrorListener( listener );
 
@@ -146,10 +152,9 @@ public class DefinitionFileParser
 
         checkForErrors( listener, visitor, definitionFile );
       }
-      catch ( IOException e )
+      catch ( final IOException e )
       {
-        String message = ErrorMessageTranslator.translate( ErrorMessageConstants.DEF_FILE_READ_FAILED, definitionFile.normalize().toString() );
-        throw new WatchDogException( message, e );
+        throw new WatchDogException( translate( DEF_FILE_READ_FAILED, definitionFile.normalize().toString() ).orElse( DEF_FILE_READ_FAILED ), e );
       }
     }
 
@@ -168,27 +173,16 @@ public class DefinitionFileParser
    *           <b>one</b> definition file
    * @since 1.1
    */
-  private void checkForErrors( ErrorCollectingListener listener, ConventionDefinitionVisitor visitor, Path definitionFile ) throws WatchDogException
+  private void checkForErrors( final ErrorCollectingListener listener, final ConventionDefinitionVisitor visitor, final Path definitionFile )
+      throws WatchDogException
   {
-    List<String> parseErrors = listener.getErrors();
-    List<String> visitorErrors = visitor.getErrors();
+    final List<String> parseErrors = listener.getErrors();
+    final List<String> visitorErrors = visitor.getErrors();
 
     if ( !parseErrors.isEmpty() || !visitorErrors.isEmpty() )
     {
-      List<String> errors = new ArrayList<>( parseErrors.size() + visitorErrors.size() );
-      errors.addAll( parseErrors );
-      errors.addAll( visitorErrors );
-
-      String lineSep = System.lineSeparator();
-      StringBuilder builder = new StringBuilder();
-      for ( String error : errors )
-      {
-        builder.append( lineSep );
-        builder.append( error );
-      }
-
-      String message = ErrorMessageTranslator.translate( ErrorMessageConstants.PARSING_ERRORS, definitionFile.toString(), builder.toString() );
-      throw new WatchDogException( message );
+      final String errors = concat( parseErrors.stream(), visitorErrors.stream() ).collect( joining( lineSeparator() ) );
+      throw new WatchDogException( translate( PARSING_ERRORS, definitionFile, errors ).orElse( PARSING_ERRORS ) );
     }
   }
 
@@ -204,16 +198,16 @@ public class DefinitionFileParser
    *           list is null or empty or contains a null value
    * @since 1.1
    */
-  private List<Path> checkAndNormalizePathList( List<Path> definitionFiles ) throws WatchDogException
+  private List<Path> checkAndNormalizePathList( final List<Path> definitionFiles ) throws WatchDogException
   {
     if ( definitionFiles == null || definitionFiles.isEmpty() )
     {
       throw new IllegalArgumentException( "The list containing the naming convention definition files must not be null or empty!" );
     }
 
-    List<Path> normalizedPaths = new ArrayList<>( definitionFiles.size() );
+    final List<Path> normalizedPaths = new ArrayList<>( definitionFiles.size() );
 
-    for ( Path definitionFile : definitionFiles )
+    for ( final Path definitionFile : definitionFiles )
     {
       checkInputPath( definitionFile );
       normalizedPaths.add( definitionFile.normalize() );
@@ -230,7 +224,7 @@ public class DefinitionFileParser
    *           system or is no regular file
    * @throws IllegalArgumentException if the input definition file is null
    */
-  private static void checkInputPath( Path definitionFile ) throws WatchDogException
+  private static void checkInputPath( final Path definitionFile ) throws WatchDogException
   {
     if ( definitionFile == null )
     {
@@ -239,8 +233,7 @@ public class DefinitionFileParser
 
     if ( !Files.exists( definitionFile ) || !Files.isRegularFile( definitionFile ) )
     {
-      String message = ErrorMessageTranslator.translate( ErrorMessageConstants.DEF_FILE_NOT_EXISTING, definitionFile.normalize().toString() );
-      throw new WatchDogException( message );
+      throw new WatchDogException( translate( DEF_FILE_NOT_EXISTING, definitionFile.normalize() ).orElse( DEF_FILE_NOT_EXISTING ) );
     }
   }
 }

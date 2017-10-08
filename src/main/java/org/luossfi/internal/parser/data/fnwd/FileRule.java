@@ -2,7 +2,7 @@
  * FileNamingWatchDog, a library for checking Java packages and source file
  * names for compliance to naming conventions.
  *
- * Copyright (C) 2016++ Steff Lukas <steff.lukas@luossfi.org>
+ * Copyright (C) 2017++ Steff Lukas <steff.lukas@luossfi.org>
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -17,25 +17,24 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.luossfi.internal.data.fnwd;
+package org.luossfi.internal.parser.data.fnwd;
 
 /**
- * The Enum ComplianceCheckStatus defines the different possible status for the
- * compliance check.
+ * A file rule is an immutable object which holds one naming rule used for
+ * checking file names.
  *
  * @author Steff Lukas
- * @since 1.0
+ * @since 1.2
  */
-public enum ComplianceCheckStatus
+public interface FileRule
 {
 
-  /** The compliance check is not yet done. */
-  PENDING,
-
-  /** The compliance check succeeded. */
-  SUCCESS,
-
-  /** The compliance check failed. */
-  FAILED
-
+  /**
+   * Tests whether the input {@code fileName} is compliant to this rule.
+   *
+   * @param fileName the name of the file to test, must not be null
+   * @return true, if the file name is compliant to this rule, false otherwise
+   * @throws NullPointerException if {@code fileName} is null
+   */
+  boolean testCompliance( final String fileName );
 }
