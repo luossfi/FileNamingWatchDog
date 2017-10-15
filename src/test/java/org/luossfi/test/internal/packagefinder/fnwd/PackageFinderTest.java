@@ -32,12 +32,13 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -46,22 +47,30 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Steff Lukas
  */
+@SuppressWarnings( "static-method" )
 @DisplayName( "PackageFinder Tests" )
 class PackageFinderTest
 {
-  private Path srcDir;
+  private FileSystem fileSystem;
+  private Path       srcDir;
 
   @BeforeEach
   void createSrcDir() throws IOException
   {
-    final FileSystem fs = newFileSystem( unix() );
-    srcDir = fs.getPath( "/tmp/project" );
+    fileSystem = newFileSystem( unix() );
+    srcDir = fileSystem.getPath( "/tmp/project" );
     createDirectories( srcDir );
+  }
+
+  @AfterEach
+  void closeFileSystem() throws IOException
+  {
+    fileSystem.close();
   }
 
   @Test
   @DisplayName( "inputting null throws NullPointerException" )
-  void inputtingNullThrowsNullPointerException() throws IOException
+  void inputtingNullThrowsNullPointerException()
   {
     assertThatThrownBy( () -> findPackages( null ) ).isInstanceOf( NullPointerException.class );
   }
@@ -89,7 +98,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( emptyDefaultPkg );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( emptyDefaultPkg );
     }
 
     @Test
@@ -100,7 +109,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( simpleEmptyPkg );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( simpleEmptyPkg );
     }
 
     @Test
@@ -113,7 +122,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 3 ).contains( fooPkg, barPkg, bazPkg );
+      assertThat( foundPackages ).hasSize( 3 ).containsOnly( fooPkg, barPkg, bazPkg );
     }
 
     @Test
@@ -124,7 +133,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( complexEmptyPackage );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( complexEmptyPackage );
     }
 
     @Test
@@ -137,7 +146,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 3 ).contains( fooPkg, barPkg, bazPkg );
+      assertThat( foundPackages ).hasSize( 3 ).containsOnly( fooPkg, barPkg, bazPkg );
     }
 
     @Test
@@ -151,7 +160,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 4 ).contains( fooPkg, luossfiPkg, barPkg, fnwdPkg );
+      assertThat( foundPackages ).hasSize( 4 ).containsOnly( fooPkg, luossfiPkg, barPkg, fnwdPkg );
     }
   }
 
@@ -168,7 +177,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( defaultPkg );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( defaultPkg );
     }
 
     @Test
@@ -179,7 +188,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( simplePkg );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( simplePkg );
     }
 
     @Test
@@ -192,7 +201,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 3 ).contains( fooPkg, barPkg, bazPkg );
+      assertThat( foundPackages ).hasSize( 3 ).containsOnly( fooPkg, barPkg, bazPkg );
     }
 
     @Test
@@ -203,7 +212,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( complexPackage );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( complexPackage );
     }
 
     @Test
@@ -216,7 +225,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 3 ).contains( fooPkg, barPkg, bazPkg );
+      assertThat( foundPackages ).hasSize( 3 ).containsOnly( fooPkg, barPkg, bazPkg );
     }
 
     @Test
@@ -230,7 +239,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 4 ).contains( fooPkg, luossfiPkg, barPkg, fnwdPkg );
+      assertThat( foundPackages ).hasSize( 4 ).containsOnly( fooPkg, luossfiPkg, barPkg, fnwdPkg );
     }
   }
 
@@ -247,7 +256,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( defaultPkg );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( defaultPkg );
     }
 
     @Test
@@ -258,7 +267,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( simplePkg );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( simplePkg );
     }
 
     @Test
@@ -271,7 +280,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 3 ).contains( fooPkg, barPkg, bazPkg );
+      assertThat( foundPackages ).hasSize( 3 ).containsOnly( fooPkg, barPkg, bazPkg );
     }
 
     @Test
@@ -282,7 +291,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( complexPackage );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( complexPackage );
     }
 
     @Test
@@ -295,7 +304,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 3 ).contains( fooPkg, barPkg, bazPkg );
+      assertThat( foundPackages ).hasSize( 3 ).containsOnly( fooPkg, barPkg, bazPkg );
     }
 
     @Test
@@ -309,7 +318,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 4 ).contains( fooPkg, luossfiPkg, barPkg, fnwdPkg );
+      assertThat( foundPackages ).hasSize( 4 ).containsOnly( fooPkg, luossfiPkg, barPkg, fnwdPkg );
     }
   }
 
@@ -325,7 +334,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( defaultPkg );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( defaultPkg );
     }
 
     @Test
@@ -336,7 +345,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( simplePkg );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( simplePkg );
     }
 
     @Test
@@ -347,7 +356,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).contains( complexPkg );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( complexPkg );
     }
 
     @Test
@@ -358,7 +367,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).containsEntry( srcDir.relativize( srcDir ), emptySet() );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( new SimpleEntry<>( srcDir.relativize( srcDir ), emptySet() ) );
     }
 
     @Test
@@ -369,7 +378,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).containsEntry( srcDir.relativize( srcDir ), emptySet() );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( new SimpleEntry<>( srcDir.relativize( srcDir ), emptySet() ) );
     }
 
     @Test
@@ -380,7 +389,7 @@ class PackageFinderTest
 
       final Map<Path, Set<Path>> foundPackages = findPackages( srcDir );
 
-      assertThat( foundPackages ).hasSize( 1 ).containsEntry( srcDir.relativize( srcDir ), emptySet() );
+      assertThat( foundPackages ).hasSize( 1 ).containsOnly( new SimpleEntry<>( srcDir.relativize( srcDir ), emptySet() ) );
     }
   }
 
@@ -397,13 +406,12 @@ class PackageFinderTest
    */
   private Entry<Path, Set<Path>> addPackage( final Path srcDir, final String pkg, final String... contents ) throws IOException
   {
-    final FileSystem fs = srcDir.getFileSystem();
     final Path pkgPath = createDirectories( srcDir.resolve( pkg ) );
     final Set<Path> contentPaths = new HashSet<>();
 
     for ( final String content : contents )
     {
-      final Path file = fs.getPath( content );
+      final Path file = fileSystem.getPath( content );
       createFile( pkgPath.resolve( file ) );
       if ( !Files.isHidden( file ) )
       {
@@ -411,6 +419,6 @@ class PackageFinderTest
       }
     }
 
-    return new AbstractMap.SimpleImmutableEntry<>( srcDir.relativize( pkgPath ), contentPaths );
+    return new SimpleEntry<>( srcDir.relativize( pkgPath ), contentPaths );
   }
 }
