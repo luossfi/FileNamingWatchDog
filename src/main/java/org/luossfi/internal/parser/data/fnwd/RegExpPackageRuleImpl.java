@@ -57,12 +57,15 @@ public class RegExpPackageRuleImpl implements PackageRule
 
   /**
    * Creates a new regular expression based package rule object from the input
-   * rule regular expression and child file rules.
+   * rule regular expression and child file rules.<br>
+   * This constructor does not allow to use an empty {@code fileRules}
+   * collection since this would effectively fail the checks every time.
    *
    * @param ruleRegExp the rule's regular expression, must not be null
    * @param fileRules the collection of file rules, must not be null
    * @throws NullPointerException if either {@code ruleRegExp} or
    *           {@code fileRules} is null
+   * @throws IllegalArgumentException if {@code fileRules} is empty
    * @throws PatternSyntaxException if the input rule regular expression cannot
    *           be compiled.
    */
@@ -70,6 +73,10 @@ public class RegExpPackageRuleImpl implements PackageRule
   {
     requireNonNull( ruleRegExp, "The input ruleRegExp must not be null!" );
     requireNonNull( fileRules, "The input fileRules must not be null!" );
+    if ( fileRules.isEmpty() )
+    {
+      throw new IllegalArgumentException( "The input fileRules must not be empty!" );
+    }
 
     this.ruleRegExp = Pattern.compile( ruleRegExp );
     this.fileRules = unmodifiableList( new ArrayList<>( fileRules ) );
@@ -150,7 +157,7 @@ public class RegExpPackageRuleImpl implements PackageRule
   public PackageRule merge( final PackageRule other )
   {
     requireNonNull( other, "Cannot merge with a null value!" );
-    if ( !this.equals( other ) )
+    if ( !equals( other ) )
     {
       throw new IllegalArgumentException( format( "Cannot merge this rule \"{0}\" with other rule \"{1}\"!", this, other ) );
     }
