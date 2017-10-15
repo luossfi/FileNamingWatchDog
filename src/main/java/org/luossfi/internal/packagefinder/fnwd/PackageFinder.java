@@ -40,10 +40,22 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * The package finder takes in a path to a directory and searches it for
+ * packages (i.e. subdirectories) and their contents.
+ *
  * @author Steff Lukas
  */
 public final class PackageFinder
 {
+
+  /**
+   * Hidden constructor, pure static class
+   */
+  private PackageFinder()
+  {
+    // Nothing to do here
+  }
+
   /**
    * Finds all packages contained in the input {@code sourceDirectory}. A
    * package is considered to be a path which either contains at least one file
@@ -162,12 +174,7 @@ public final class PackageFinder
     @Override
     public FileVisitResult visitFileFailed( final Path file, final IOException ioException ) throws IOException
     {
-      if ( !isHidden( file ) )
-      {
-        throw ioException;
-      }
-
-      return CONTINUE;
+      throw ioException;
     }
 
     /** {@inheritDoc} */
