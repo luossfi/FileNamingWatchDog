@@ -227,7 +227,7 @@ public class FileNamingWatchDog
     return complianceIssues;
   }
 
-  private String pathToPackage( final Path toConvert )
+  private static String pathToPackage( final Path toConvert )
   {
     return stream( toConvert.spliterator(), false ).map( Path::toString ).collect( joining( "." ) );
   }
@@ -240,7 +240,7 @@ public class FileNamingWatchDog
    * @param fileRules the file rules to check against
    * @return the set of non-compliant file names
    */
-  private Set<String> checkFiles( final Collection<Path> files, final Collection<FileRule> fileRules )
+  private static Set<String> checkFiles( final Collection<Path> files, final Collection<FileRule> fileRules )
   {
     return files.stream().map( Path::toString ).filter( file -> fileRules.stream().noneMatch( rule -> rule.testCompliance( file ) ) ).collect(
         toSet() );

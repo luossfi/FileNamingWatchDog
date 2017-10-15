@@ -173,7 +173,7 @@ public class DefinitionFileParser
    *           <b>one</b> definition file
    * @since 1.1
    */
-  private void checkForErrors( final ErrorCollectingListener listener, final ConventionDefinitionVisitor visitor, final Path definitionFile )
+  private static void checkForErrors( final ErrorCollectingListener listener, final ConventionDefinitionVisitor visitor, final Path definitionFile )
       throws WatchDogException
   {
     final List<String> parseErrors = listener.getErrors();
@@ -198,7 +198,7 @@ public class DefinitionFileParser
    *           list is null or empty or contains a null value
    * @since 1.1
    */
-  private List<Path> checkAndNormalizePathList( final List<Path> definitionFiles ) throws WatchDogException
+  private static List<Path> checkAndNormalizePathList( final List<Path> definitionFiles ) throws WatchDogException
   {
     if ( definitionFiles == null || definitionFiles.isEmpty() )
     {

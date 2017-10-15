@@ -283,7 +283,7 @@ public class ConventionDefinitionVisitor extends ConventionDefinitionParserBaseV
 
       if ( value == null )
       {
-        errors.add( format( "line {0}:{1} missing value for placeholder {2}", token.getLine(), token.getCharPositionInLine(), token.getText() ) );
+        errors.add( format( "line {0}:{1} missing value for placeholder {2}", Integer.valueOf(token.getLine()), Integer.valueOf( token.getCharPositionInLine()), token.getText() ) );
       }
       return value;
     }

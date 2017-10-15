@@ -65,7 +65,7 @@ public final class ErrorMessageTranslator
 
       translation = Optional.of( messageText );
     }
-    catch ( MissingResourceException e )
+    catch ( @SuppressWarnings( "unused" ) MissingResourceException e )
     {
       translation = Optional.empty();
     }
